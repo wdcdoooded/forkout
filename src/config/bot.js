@@ -24,9 +24,9 @@ export const botConfig = {
     activities: [
       {
         // Text users will see (example: "Playing /help | Titan Bot").
-        name: "Made with ❤️",
+        name: "This is Kekomon ! ❤️",
         // Activity type number (0 = Playing).
-        type: 0,
+        type: 5,
       },
     ],
   },
@@ -91,7 +91,7 @@ export const botConfig = {
   embeds: {
     colors: {
       // Main brand colors.
-      primary: "#336699",
+      primary: "#00ff45",
       secondary: "#2F3136",
 
       // Standard status colors for success/error/warning/info messages.
@@ -139,7 +139,7 @@ export const botConfig = {
     },
     footer: {
       // Default footer text used in bot embeds.
-      text: "Titan Bot",
+      text: "Kekomon Test",
       // Footer icon URL (null = no icon).
       icon: null,
     },
