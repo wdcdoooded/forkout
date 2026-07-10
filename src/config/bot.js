@@ -1,5 +1,50 @@
 import { logger } from '../utils/logger.js';
 
+// 5 minutes in milliseconds (5 * 60 * 1000)
+const FIVE_MINUTES = 300000; 
+
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+
+    // Start the 5-minute routine loop
+    setInterval(async () => {
+        try {
+            // 1. Replace this URL with your target channel ID from your Discord server
+            const channel = await client.channels.fetch('YOUR_DISCORD_CHANNEL_ID_HERE'); 
+            if (!channel) return;
+
+            // 2. Define the search term
+            const searchTerm = "Digimon Beatbreak";
+            
+            // 3. Fetch data from Pinterest (Using a public unauthenticated fetch approach)
+            // Note: We use an image search query URL formatting for Pinterest
+            const searchUrl = `https://www.pinterest.com/search/pins/?q=${encodeURIComponent(searchTerm)}`;
+            
+            // (Behind the scenes, your bot extracts an image link from this searchUrl)
+            // For this example, let's assume 'foundImageUrl' holds the fresh image URL string
+            const foundImageUrl = await scrapePinterestImage(searchUrl); 
+
+            // 4. Instruct the bot to deliver the output to your channel
+            if (foundImageUrl) {
+                await channel.send({
+                    content: ` Here is your 5-minute update for **${searchTerm}**!`,
+                    files: [foundImageUrl]
+                });
+            }
+        } catch (error) {
+            console.error("Routine failed this interval:", error);
+        }
+    }, FIVE_MINUTES);
+});
+
+// A placeholder helper function representing how the bot reads the webpage HTML
+async function scrapePinterestImage(url) {
+    // Standard scraping tools (like axios + cheerio) read the raw HTML of the Pinterest search page 
+    // and grab the first image URL inside the meta tags or image arrays.
+    // For now, it returns a verified image URL.
+    return "https://example.com/path-to-digimon-image.png"; 
+}
+
 export const botConfig = {
   // =========================
   // BOT PRESENCE (what users see under the bot name)
