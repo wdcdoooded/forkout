@@ -1,10 +1,7 @@
 import { logger } from '../utils/logger.js';
 
 // 5 minutes in milliseconds (5 * 60 * 1000)
-const FIVE_MINUTES = 300000; 
-
-client.once('ready', () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+const FIVE_MINUTES = 60000; 
 
     // Start the 5-minute routine loop
     setInterval(async () => {
