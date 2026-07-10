@@ -10,7 +10,7 @@ client.once('ready', () => {
     setInterval(async () => {
         try {
             // 1. Replace this URL with your target channel ID from your Discord server
-            const channel = await client.channels.fetch('YOUR_DISCORD_CHANNEL_ID_HERE'); 
+            const channel = await client.channels.fetch('1525042114587525201'); 
             if (!channel) return;
 
             // 2. Define the search term
