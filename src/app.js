@@ -16,6 +16,7 @@ import { initializeMusic } from './services/music/riffySetup.js';
 import { shutdownMusic } from './services/music/playerHandler.js';
 import pkg from '../package.json' with { type: 'json' };
 import { EXPECTED_SCHEMA_VERSION, EXPECTED_SCHEMA_LABEL } from './config/schemaVersion.js';
+import { sendDailySearch } from './services/dailySearchService.js';
 
 class TitanBot extends Client {
   constructor() {
@@ -109,6 +110,8 @@ class TitanBot extends Client {
       this.setupCronJobs();
     } catch (error) {
       logger.error('Failed to start bot:', error);
+
+      
       process.exit(1);
     }
   }
@@ -255,6 +258,10 @@ class TitanBot extends Client {
     cron.schedule('0 6 * * *', () => checkBirthdays(this));
     cron.schedule('* * * * *', () => checkGiveaways(this));
     cron.schedule('*/15 * * * *', () => this.updateAllCounters());
+
+    // Runs once a day at 8:00 AM. 
+    // (Change to '* * * * *' if you want to test it every minute!)
+    cron.schedule('* * * * *', () => sendDailySearch(this));
   }
 
   async updateAllCounters() {
