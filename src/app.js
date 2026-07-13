@@ -261,7 +261,7 @@ class TitanBot extends Client {
 
     // Runs once a day at 8:00 AM. 
     // (Change to '* * * * *' if you want to test it every minute!)
-    //cron.schedule('* * * * *', () => sendDailySearch(this));
+    cron.schedule('* * * * *', () => sendDailySearch(this));
   }
 
   async updateAllCounters() {
