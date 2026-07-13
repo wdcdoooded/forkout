@@ -1,39 +1,27 @@
 import { EmbedBuilder } from 'discord.js';
-import axios from 'axios';
 import { logger } from '../utils/logger.js';
 
 export const sendDailySearch = async (client) => {
-    // Replace with the ID of the channel where you want the daily Digimon to post
-    const targetChannelId = '1525042114587525201'; 
-
+    const targetChannelId = '1525042114587525201'; // Replace with your channel ID
+    
     try {
-        // 1. Fetch the full list of Digimon from the free public API
-        const response = await axios.get('https://digimon-api.vercel.app/api/digimon');
-        const digimonList = response.data;
-
-        // 2. Pick a random Digimon from the list
-        const randomDigimon = digimonList[Math.floor(Math.random() * digimonList.length)];
-
-        // 3. Find the channel in your Discord server
         const channel = await client.channels.fetch(targetChannelId);
-        if (!channel) {
-            logger.warn(`Daily Digimon Task: Could not find channel ${targetChannelId}`);
-            return;
-        }
+        if (!channel) return;
 
-        // 4. Build a beautiful embed using the random Digimon's data
+        // Picsum automatically returns a random 800x600 image every time this URL is called!
+        const randomImageUrl = 'https://picsum.photos/800/600?random=' + Date.now();
+
         const embed = new EmbedBuilder()
-            .setTitle(`👾 Daily Digimon: ${randomDigimon.name}!`)
-            .setDescription(`**Level:** ${randomDigimon.level}`)
-            .setImage(randomDigimon.img)
-            .setColor('#FF9900')
-            .setFooter({ text: 'Powered by the free Digimon API' });
+            .setTitle('💡 Your Daily Design Inspiration')
+            .setDescription('Here is a random high-quality image to spark your creativity today.')
+            .setImage(randomImageUrl)
+            .setColor('#3498DB')
+            .setFooter({ text: 'Powered by Lorem Picsum (No Auth PoC)' });
 
-        // 5. Send it to the channel!
         await channel.send({ embeds: [embed] });
-        logger.info(`✅ Successfully sent Daily Digimon: ${randomDigimon.name}`);
+        logger.info('✅ Successfully sent Daily Inspiration PoC!');
         
     } catch (error) {
-        logger.error('❌ Failed to fetch or send the Daily Digimon:', error);
+        logger.error('❌ Failed to send inspiration:', error);
     }
 };
