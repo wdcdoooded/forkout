@@ -1,60 +1,69 @@
 import { SlashCommandBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, MessageFlags } from 'discord.js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Initialize the Gemini API using the key you put in your .env file
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export default {
-    // This defines what shows up when a user types /ai in Discord
     data: new SlashCommandBuilder()
         .setName('ai')
         .setDescription('Tell the AI what you need!'),
 
     async execute(interaction) {
-        // 1. CREATE THE POP-UP FORM (MODAL)
+        // 1. CREATE THE POP-UP FORM
         const modal = new ModalBuilder()
             .setCustomId('ai_request_modal')
             .setTitle('AI Generation Request');
 
-        // Create the free-text input space
         const requirementInput = new TextInputBuilder()
             .setCustomId('user_requirement')
             .setLabel('What output do you need?')
-            .setStyle(TextInputStyle.Paragraph) // Paragraph makes it a large text box
+            .setStyle(TextInputStyle.Paragraph)
             .setPlaceholder('e.g., Write me a short story about a cybernetic cat...')
             .setRequired(true);
 
         const row = new ActionRowBuilder().addComponents(requirementInput);
         modal.addComponents(row);
 
-        // 2. SHOW THE FORM TO THE USER
+        // 2. SHOW THE FORM
         await interaction.showModal(modal);
 
-        // 3. WAIT FOR THEM TO HIT "SUBMIT"
+        // 3. WAIT FOR SUBMISSION
         const submitted = await interaction.awaitModalSubmit({
-            // Ensure we only catch the modal submitted by THIS user
             filter: i => i.customId === 'ai_request_modal' && i.user.id === interaction.user.id,
-            time: 300_000 // Give them 5 minutes to type before it times out
+            time: 300_000 
         }).catch(() => null);
 
-        // 4. PROCESS THE SUBMISSION
+        // 4. PROCESS WITH REAL AI
         if (submitted) {
-            // Grab the text they typed
             const userPrompt = submitted.fields.getTextInputValue('user_requirement');
 
-            // Send a quick loading message so Discord doesn't give a "failed" error
+            // Discord needs an immediate response, so we tell the user we are thinking
             await submitted.reply({ 
-                content: '🧠 Processing your request...', 
+                content: '🧠 Sending your request to Gemini...', 
                 flags: MessageFlags.Ephemeral 
             });
 
-            // --- THIS IS WHERE YOU WILL CALL YOUR AI API ---
-            // For now, we will just simulate a fake 2-second AI response
-            
-            setTimeout(async () => {
-                const fakeAiResponse = "This is where the magic AI text will eventually go!";
+            try {
+                // Call the Gemini 1.5 Flash model (very fast and free)
+                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
                 
-                // Edit the loading message with the final result
-                await submitted.editReply({ 
-                    content: `**You asked:** ${userPrompt}\n\n**AI Response:**\n${fakeAiResponse}` 
-                });
-            }, 2000);
+                // Wait for the AI to generate the text
+                const result = await model.generateContent(userPrompt);
+                const aiResponse = result.response.text();
+
+                // Discord has a strict 2000-character limit per message!
+                // If the AI writes a massive essay, we have to cut it off so the bot doesn't crash.
+                const finalMessage = `**You asked:** ${userPrompt}\n\n**Gemini says:**\n${aiResponse}`;
+                const safeMessage = finalMessage.substring(0, 2000);
+
+                // Send the final result back to the user
+                await submitted.editReply({ content: safeMessage });
+
+            } catch (error) {
+                console.error("AI Generation Error:", error);
+                await submitted.editReply({ content: '❌ An error occurred while contacting the AI.' });
+            }
         }
     }
 };
