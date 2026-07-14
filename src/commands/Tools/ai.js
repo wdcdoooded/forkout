@@ -8,8 +8,11 @@ export default {
     data: new SlashCommandBuilder()
         .setName('ai')
         .setDescription('Tell the AI what you need!'),
+    
+    category: 'Tools', // <--- ADD THIS EXACT LINE!
 
     async execute(interaction) {
+       // ... the rest of the code ...
         // 1. CREATE THE POP-UP FORM
         const modal = new ModalBuilder()
             .setCustomId('ai_request_modal')
