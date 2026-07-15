@@ -12,7 +12,7 @@ import { createEmbed } from '../../utils/embeds.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('aiprompt')
-        .setDescription('Test the modal flow and send data to a channel!'),
+        .setDescription('Submit a prompt and get a receipt of your input!'),
     
     category: 'Utility',
 
@@ -60,7 +60,7 @@ export default {
             // 7. WAIT FOR SUBMISSION
             const submitted = await interaction.awaitModalSubmit({
                 filter: i => i.customId === 'avatar_prompt_modal' && i.user.id === interaction.user.id,
-                time: 300_000 // 5 minutes before timeout
+                time: 300_000 
             }).catch(() => null);
 
             // 8. PROCESS THE SUBMISSION
@@ -70,13 +70,12 @@ export default {
                 const selectedStyle = submitted.fields.getTextInputValue('art_style');
                 const userDescription = submitted.fields.getTextInputValue('avatar_description');
 
-                // 9. SEND DATA TO A SPECIFIC CHANNEL
+                // 9. LOG DATA TO A SPECIFIC CHANNEL
                 // ⚠️ REPLACE THIS WITH YOUR ACTUAL CHANNEL ID ⚠️
                 const targetChannelId = '1526107539303829524'; 
                 const targetChannel = interaction.client.channels.cache.get(targetChannelId);
 
                 if (targetChannel) {
-                    // Create a log embed for the target channel
                     const logEmbed = createEmbed({
                         title: '📝 New AI Prompt Submission',
                         description: `A new prompt was submitted by <@${interaction.user.id}>.`,
@@ -90,16 +89,29 @@ export default {
                     .setFooter({ text: `User ID: ${interaction.user.id}` })
                     .setTimestamp();
 
-                    // Send it to the channel
-                    await targetChannel.send({ embeds: [logEmbed] });
+                    // Send the log to the channel silently in the background
+                    await targetChannel.send({ embeds: [logEmbed] }).catch(err => logger.error('Failed to send log:', err));
                 } else {
                     logger.warn(`Could not find target channel with ID: ${targetChannelId}`);
                 }
 
-                // 10. REPLY TO THE USER
-                // Acknowledge the user's submission so the modal closes smoothly
+                // 10. REPLY TO THE USER WITH THEIR INPUT
+                // Create a receipt embed just for the user
+                const receiptEmbed = createEmbed({
+                    title: '✅ Prompt Submitted Successfully!',
+                    description: '**Here is a copy of what you submitted to the team:**',
+                    color: 'success'
+                })
+                .addFields(
+                    { name: 'Your Style', value: selectedStyle, inline: true },
+                    { name: 'Your Palette', value: selectedColor, inline: true },
+                    { name: 'Your Description', value: `\`\`\`\n${userDescription}\n\`\`\``, inline: false }
+                )
+                .setFooter({ text: 'This is a private receipt. Only you can see this.' });
+
+                // Acknowledge the modal submission by sending the receipt privately
                 await submitted.reply({ 
-                    content: '✅ Your prompt has been successfully saved and sent to the logging channel!', 
+                    embeds: [receiptEmbed], 
                     flags: MessageFlags.Ephemeral 
                 });
             }
