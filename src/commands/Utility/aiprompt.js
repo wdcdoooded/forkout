@@ -12,7 +12,7 @@ import { createEmbed } from '../../utils/embeds.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('aiprompt')
-        .setDescription('Test the modal flow without AI!'),
+        .setDescription('Test the modal flow and send data to a channel!'),
     
     category: 'Utility',
 
@@ -70,37 +70,42 @@ export default {
                 const selectedStyle = submitted.fields.getTextInputValue('art_style');
                 const userDescription = submitted.fields.getTextInputValue('avatar_description');
 
-                // Acknowledge quickly to prevent timeouts
-                await submitted.reply({ 
-                    content: '⚙️ Processing mock data...', 
-                    flags: MessageFlags.Ephemeral 
-                });
+                // 9. SEND DATA TO A SPECIFIC CHANNEL
+                // ⚠️ REPLACE THIS WITH YOUR ACTUAL CHANNEL ID ⚠️
+                const targetChannelId = '1526107539303829524'; 
+                const targetChannel = interaction.client.channels.cache.get(targetChannelId);
 
-                // 9. SIMULATE AI DELAY AND RESPOND
-                setTimeout(async () => {
-                    // Format into a clean Discord embed
-                    const responseEmbed = createEmbed({
-                        title: '🧪 Mock AI Response',
-                        description: `**Your inputs were successfully captured!**\n\nIf the AI was connected, it would generate a prompt based on:\n\n**Description:** ${userDescription}`,
-                        color: 'success'
+                if (targetChannel) {
+                    // Create a log embed for the target channel
+                    const logEmbed = createEmbed({
+                        title: '📝 New AI Prompt Submission',
+                        description: `A new prompt was submitted by <@${interaction.user.id}>.`,
+                        color: 'info'
                     })
                     .addFields(
                         { name: 'Style', value: selectedStyle, inline: true },
-                        { name: 'Palette', value: selectedColor, inline: true }
+                        { name: 'Palette', value: selectedColor, inline: true },
+                        { name: 'Description', value: userDescription, inline: false }
                     )
-                    .setFooter({ text: 'Test Flow Complete' });
+                    .setFooter({ text: `User ID: ${interaction.user.id}` })
+                    .setTimestamp();
 
-                    // Send the final result
-                    await submitted.editReply({ 
-                        content: null,
-                        embeds: [responseEmbed] 
-                    });
-                }, 2000); // 2-second fake loading delay
+                    // Send it to the channel
+                    await targetChannel.send({ embeds: [logEmbed] });
+                } else {
+                    logger.warn(`Could not find target channel with ID: ${targetChannelId}`);
+                }
+
+                // 10. REPLY TO THE USER
+                // Acknowledge the user's submission so the modal closes smoothly
+                await submitted.reply({ 
+                    content: '✅ Your prompt has been successfully saved and sent to the logging channel!', 
+                    flags: MessageFlags.Ephemeral 
+                });
             }
         } catch (error) {
             logger.error('Test Modal Error:', error);
             if (!interaction.replied && !interaction.deferred) {
-                // If it crashes, this will tell us exactly why in Discord
                 await interaction.reply({ 
                     content: `An error occurred: ${error.message}`, 
                     flags: MessageFlags.Ephemeral 
